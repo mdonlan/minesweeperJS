@@ -1,0 +1,50 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0px;
+    background-image: url("background.png");
+    background-color: #1d2333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    height: 500px;
+    width: 500px;
+    align-content: flex-start;
+}
+.row {
+    display: flex;
+    
+}
+
+.tile {
+    background: #dddddd;
+    height: 40px;
+    width: 40px;
+    margin: 1px;
+    line-height: 40px;
+    text-align: center;
+}
+
+.tile:hover {
+    background: #d4cfcf;
+}
+
+.messages {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-125px,-100px);
+    height: 100px;
+    width: 250px;
+    border: 2px solid #dddddd;
+    display: none;
+    background: #111111;
+    color: #dddddd;
+    line-height: 100px;
+    text-align: center;
+}
