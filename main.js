@@ -3,6 +3,8 @@ function createGrid() {
     var x = 0;
     var y = 0;
     allTiles = [];
+    gameOver = false;
+    numClicks = 0;
     for(var i = 0; i < 100; i++) {
         
         // create new row
@@ -41,26 +43,76 @@ function createGrid() {
     }
 };
 
+// capture click events
+
+// right click
+$(document).on("contextmenu", ".tile", function(event){
+    target = event.target;
+    //console.log($(target));
+    if($(target).hasClass("marked")) {
+        $(target).removeClass("marked");
+    } else {
+        $(target).addClass("marked");
+    }
+    return false;
+ });
+
+// left click
 function onClick() {
     $('body').click(function(event) {
         target = event.target;
-        //console.log($(target));
-        //console.log($(target).data('y'));
 
         // if click is on a valid tile
         // check if is mine
-        if($(target).data("isMine") == true) {
-            //game over
-            $(".messages").css("display", "block");
-            $(".messages").html("You hit a mine! Game Over!");
-        }
-        else if($(target).hasClass("tile")) {
-            $(target).css("background", "#dddddd");
-            $(target).data("hasBeenRevealed", true);
-            $(target).data("hasBeenUsed", true);
-            findNeighbors(target);
+        if(gameOver == false) {
+            if($(target).data("isMine") == true) {
+                if(numClicks == 0) {
+                    // if first click is on a bomb move the move 
+                    // to a random tile instead of ending the game
+                    $(target).data("isMine", false);
+                    randomMine(target);
+                } else {
+                    //game over
+                    $(".messages").css("display", "block");
+                    $(".messages").html("You hit a mine! Game Over!");
+                    gameOver = true;
+                    var bombImg = document.createElement("img");
+                    var randBombNum = Math.floor((Math.random() * 7) + 1);
+                    bombImg.setAttribute('src', 'assets/bomb0' + randBombNum + ".png");
+                    bombImg.setAttribute('alt', 'bombImg');
+                    bombImg.setAttribute('height', '40px');
+                    bombImg.setAttribute('width', '40px');
+                    $(target).append(bombImg);
+                    revealBoard();
+                }
+            }
+            else if($(target).hasClass("tile")) {
+                numClicks++;
+                $(target).css("background", "#dddddd");
+                $(target).data("hasBeenRevealed", true);
+                $(target).data("hasBeenUsed", true);
+                findNeighbors(target);
+            }
         }
     });
+};
+
+function randomMine(target) {
+    var randX = Math.floor((Math.random() * 9));
+    var randY = Math.floor((Math.random() * 9));
+
+    for(var i = 0; i < allTiles.length; i++) {
+        if($(allTiles[i]).data("x") == randX && $(allTiles[i]).data("y") == randY) {
+            if($(allTiles[i]).data("isMine") == true) {
+                // if new spot is already a mine then redo
+                console.log('redoing random mine')
+                randomMine(target);
+            } else {
+                $(allTiles[i]).data("isMine", true);
+                console.log('new random mine placed')
+            }
+        }
+    }
 };
 
 function findNeighbors(targetTile) {
@@ -121,12 +173,13 @@ function findNeighbors(targetTile) {
         }
     }
     for(var j = 0; j < neighbors.length; j++) {
-        $(neighbors[j]).data("hasBeenUsed", true);
+        //$(neighbors[j]).data("hasBeenUsed", true);
         if( $(neighbors[j]).data("isMine") == false) {
             //$(neighbors[j]).css("background", "#dddddd");
         }
         
     }
+    $(targetTile).data("hasBeenUsed", true);
     checkForMines(neighbors, targetTile);
 };
 
@@ -157,7 +210,7 @@ function checkForMines(neighbors, targetTile) {
             $(targetTile).html(numMines);
         }
     }
-    updateKnownTiles();
+    checkWin();
 };
 
 function placeMines() {
@@ -176,17 +229,42 @@ function placeMines() {
     }
 };
 
-function updateKnownTiles() {
-    // update any tiles that are displayed
-    // and have a mine as a neighbor 
-    // but dont have a number displayed
+function checkWin() {
+    // loop through all tiles and check if the only ones that
+    // haven't been used are the mines
+    var numNotUsed = 0;
     for(var i = 0; i < allTiles.length; i++) {
-        //console.log($(allTiles[i]));
-        if($(allTiles[i]).data("hasBeenRevealed") == true && $(allTiles[i]).is(':empty')) {
-          
+        if($(allTiles[i]).data("hasBeenUsed") == false) {
+            numNotUsed++;
         }
     }
+
+    if(numNotUsed == 10) {
+        console.log('user wins')
+        $(".messages").html("You found all the mines! You Win!!!");
+        $(".messages").css("display", "block");
+        gameOver = true;
+    }
+
+    if(gameOver == true) {
+        revealBoard();
+    }
 };
+
+function revealBoard() {
+    for(var i = 0; i < allTiles.length; i++) {
+        $(allTiles[i]).css("background", "#dddddd");
+        if($(allTiles[i]).data("isMine") == true) {
+            var bombImg = document.createElement("img");
+            var randBombNum = Math.floor((Math.random() * 7) + 1);
+            bombImg.setAttribute('src', 'assets/bomb0' + randBombNum + ".png");
+            bombImg.setAttribute('alt', 'bombImg');
+            bombImg.setAttribute('height', '40px');
+            bombImg.setAttribute('width', '40px');
+            $(allTiles[i]).append(bombImg);
+        }
+    }
+}
 
 createGrid();
 placeMines();
